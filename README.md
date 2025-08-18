@@ -1,37 +1,5 @@
-# MathOps Microservice
+docker build -t raglibrarian .
 
-A lightweight python microservice that supports three math operations: power, fibonacci, and factorial.
+docker run --rm -it -e OPENAI_API_KEY="insert-key-here" -e MODEL=gpt-5-nano -e PORT=8989 -e CHROMA_TELEMETRY_ENABLED=false -p 8989:8989 -v smartlib_chroma:/app/chroma_data smart-librarian
 
-## Tech stack
-- Python 3.11 lite
-  - FastAPI async API
-  - Async worker queue
-  - SQLite logging
-  - Pydantic for serialization
-- Docker-ready
-
-## Build and run
-```cmd
-docker build -t mathops .
-
-for cmd use:
-docker run -p 8000:8000 -v "%cd%\db:/app/db" mathops
-
-for powershell use:
-docker run -p 8000:8000 -v "C:\Users\tudor\source\repos\PythonMath\db:/app/db" mathops
-```
-
-## API Example
-```
-POST /calculate
-{
-  "op": "pow",
-  "a": 2,
-  "b": 10
-}
-
-GET /result/{job_id}
-```
-
-## Interact with the web UI
-Visit [http://localhost:8000/ui](http://localhost:8000/ui) to use the form-based interface.
+[localhost](http://localhost:8989/docs#/default/health_healthz_get)

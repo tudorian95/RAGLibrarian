@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl tini ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
+ENV CHROMA_TELEMETRY_ENABLED=false
+
 WORKDIR /app
 
 # Copy deps first for better layer caching
