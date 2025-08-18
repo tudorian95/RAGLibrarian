@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  smart-librarian:
+    build: .
+    image: smart-librarian:latest
+    container_name: smart-librarian
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MODEL=${MODEL:-gpt-5-mini}
+      - PORT=${PORT:-8989}
+      - CHROMA_TELEMETRY_ENABLED=false
+    ports:
+      - "${PORT:-8989}:${PORT:-8989}"
+    volumes:
+      - chroma_data:/app/chroma_data
+volumes:
+  chroma_data:

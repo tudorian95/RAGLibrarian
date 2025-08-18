@@ -1,0 +1,101 @@
+[
+    {
+      "title": "1984",
+      "author": "George Orwell",
+      "themes": ["totalitarianism", "surveillance", "truth vs. propaganda", "freedom"],
+      "short_summary": "A dystopian society where Big Brother watches all, and a clerk named Winston secretly yearns for truth and freedom.",
+      "full_summary": "George Orwell's '1984' portrays a totalitarian regime that polices not only actions but thoughts. Winston Smith toils rewriting history for the Party while secretly resisting its suffocating control. As he pursues forbidden love and truth, he confronts omnipresent surveillance, linguistic manipulation, and psychological torture. The novel interrogates power, reality, and the fragility of individual freedom."
+    },
+    {
+      "title": "Brave New World",
+      "author": "Aldous Huxley",
+      "themes": ["hedonism", "social control", "technology", "conformity"],
+      "short_summary": "A future engineered for pleasure and stability, where individuality is traded for comfort and control.",
+      "full_summary": "In 'Brave New World', society is engineered through genetics, conditioning, and a happiness drug called soma. People are sorted into castes and trained to love their roles, trading individuality for stability. When an outsider—'the Savage'—questions this perfect order, the costs of utopia become stark: what is a life without suffering, art, or authentic freedom?"
+    },
+    {
+      "title": "The Hobbit",
+      "author": "J. R. R. Tolkien",
+      "themes": ["adventure", "friendship", "courage", "home"],
+      "short_summary": "Reluctant hobbit Bilbo joins dwarves to reclaim a treasure from the dragon Smaug, discovering courage along the way.",
+      "full_summary": "Bilbo Baggins cherishes peace and tea, but wizard Gandalf and thirteen dwarves pull him into a quest to reclaim Erebor from Smaug. Through trolls, goblins, riddles with Gollum, and perilous forests, Bilbo evolves from comfort-seeker to clever hero. 'The Hobbit' celebrates friendship, wit over brute force, and the tug-of-war between adventure and the comforts of home."
+    },
+    {
+      "title": "The Lord of the Rings",
+      "author": "J. R. R. Tolkien",
+      "themes": ["good vs. evil", "fellowship", "sacrifice", "power"],
+      "short_summary": "A perilous quest to destroy the One Ring, with a fellowship bound by loyalty and hope.",
+      "full_summary": "When the One Ring surfaces in the Shire, Frodo and friends embark on a journey to destroy it in Mount Doom. Pursued by Sauron's forces, they form a fellowship with men, a wizard, an elf, and a dwarf. The saga explores temptation, courage, and friendship as the smallest of people shoulder the heaviest burdens to preserve a free world."
+    },
+    {
+      "title": "Dune",
+      "author": "Frank Herbert",
+      "themes": ["destiny", "ecology", "politics", "religion"],
+      "short_summary": "On desert planet Arrakis, Paul Atreides is thrust into a struggle over spice, prophecy, and power.",
+      "full_summary": "'Dune' follows Paul Atreides as his family inherits Arrakis, source of the galaxy's most valuable spice. Betrayal forces Paul into the desert among the Fremen, where visions of a fateful future collide with politics and ecology. Herbert crafts a layered epic on power, environment, and messianic myth-making."
+    },
+    {
+      "title": "The Name of the Wind",
+      "author": "Patrick Rothfuss",
+      "themes": ["storytelling", "identity", "magic", "loss"],
+      "short_summary": "Kvothe, a legendary figure, narrates his life—from troupe child to arcanist—seeking the truth behind the Chandrian.",
+      "full_summary": "Framed as a confession to a scribe, Kvothe recounts his childhood among traveling performers, his time as a beggar, and his entry into a University of magic. Brilliant yet reckless, he chases rumors of the Chandrian while struggling with poverty, friendship, and love. The novel meditates on the power—and slipperiness—of stories."
+    },
+    {
+      "title": "The Book Thief",
+      "author": "Markus Zusak",
+      "themes": ["war", "friendship", "words", "loss"],
+      "short_summary": "Narrated by Death, a German girl finds solace in stolen books during World War II.",
+      "full_summary": "Death narrates the life of Liesel Meminger, fostered in Nazi Germany. As war tightens, she steals and shares books, forging bonds with neighbors and a hidden Jewish fist-fighter. In a world obsessed with destructive words, Liesel clings to stories that heal. The novel blends tenderness and tragedy with haunting grace."
+    },
+    {
+      "title": "All Quiet on the Western Front",
+      "author": "Erich Maria Remarque",
+      "themes": ["war", "trauma", "disillusionment", "friendship"],
+      "short_summary": "A young German soldier confronts the brutal reality of WWI, stripped of illusions.",
+      "full_summary": "Paul Bäumer enlists with his classmates, only to discover the front's terror and monotony. Comradeship is a thin shield against shells, hunger, and dehumanization. Remarque’s classic dismantles patriotic rhetoric, revealing the psychic scars war leaves on a generation."
+    },
+    {
+      "title": "The Old Man and the Sea",
+      "author": "Ernest Hemingway",
+      "themes": ["perseverance", "pride", "nature", "isolation"],
+      "short_summary": "An aging fisherman battles a giant marlin far out at sea, wrestling with fate and dignity.",
+      "full_summary": "Santiago, an old Cuban fisherman, endures a long unlucky streak. Alone at sea, he hooks a massive marlin and engages in an elemental struggle of will and respect. Though sharks reduce his prize to a skeleton, his resilience and grace endure. Hemingway distills heroism into spare, luminous prose."
+    },
+    {
+      "title": "The Road",
+      "author": "Cormac McCarthy",
+      "themes": ["survival", "parenthood", "hope", "morality"],
+      "short_summary": "A father and son trek through a burned America, carrying the 'fire' of human decency.",
+      "full_summary": "After an unspecified cataclysm, a man and his boy move south along a ruined highway, scavenging and fleeing marauders. Their love becomes a fragile moral compass in a world gone gray. Stark and tender, 'The Road' asks what it means to carry hope when almost all else is ash."
+    },
+    {
+      "title": "The Left Hand of Darkness",
+      "author": "Ursula K. Le Guin",
+      "themes": ["gender", "politics", "communication", "friendship"],
+      "short_summary": "An envoy to an icy world navigates politics and ambisexual society, forging an unlikely bond.",
+      "full_summary": "Genly Ai visits Gethen to invite it into an interstellar coalition. There, gender is fluid and politics glacial. Misunderstandings thaw into friendship during a perilous trek over frozen waste. Le Guin crafts a profound study of culture, identity, and trust."
+    },
+    {
+      "title": "Ender's Game",
+      "author": "Orson Scott Card",
+      "themes": ["strategy", "childhood", "ethics", "war"],
+      "short_summary": "A gifted boy is trained through ruthless games to command humanity’s war against aliens.",
+      "full_summary": "Ender Wiggin, brilliant and compassionate, is shaped by Battle School’s zero-gravity war games. Manipulated by adults, he excels while the cost to his psyche mounts. The novel probes leadership, empathy, and the moral fog of preemptive war."
+    },
+    {
+      "title": "The Night Circus",
+      "author": "Erin Morgenstern",
+      "themes": ["love", "rivalry", "magic", "fate"],
+      "short_summary": "A mysterious circus opens at night, hosting a duel between two magicians bound since childhood.",
+      "full_summary": "Le Cirque des Rêves appears without warning, a labyrinth of wonders. Within, Celia and Marco—trained by rival mentors—compete in a contest that entwines performers and patrons alike. As their love deepens, the stakes rise toward an enchanted, bittersweet resolution."
+    },
+    {
+      "title": "Harry Potter and the Sorcerer's Stone",
+      "author": "J. K. Rowling",
+      "themes": ["friendship", "magic", "identity", "courage"],
+      "short_summary": "An orphan discovers he’s a wizard, finds friends, and faces a lurking dark power at school.",
+      "full_summary": "On his eleventh birthday, Harry learns he’s a wizard and attends Hogwarts. With friends Ron and Hermione, he uncovers secrets surrounding a coveted stone and a returning evil. The story blends wonder with themes of loyalty, choice, and growing up."
+    }
+  ]
+  
