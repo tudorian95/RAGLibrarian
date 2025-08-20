@@ -39,7 +39,6 @@ def recommend_and_summarize(user_prompt: str, candidates: List[Dict]) -> Tuple[s
         messages=_messages(user_prompt, candidates),
         tools=[tool_schema()],
         tool_choice="auto",
-        temperature=0.4,
     )
 
     choice = completion.choices[0]

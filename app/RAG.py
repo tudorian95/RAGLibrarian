@@ -1,173 +1,144 @@
+# app/rag.py
 import os
+# Disable Chroma telemetry early (prevents OpenAI proxies issue inside telemetry)
+os.environ["CHROMA_TELEMETRY_ENABLED"] = "false"
+
 import json
-import glob
-from time import sleep
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import List, Dict, Any, Tuple
+from pathlib import Path
 
 import chromadb
-from chromadb.utils import embedding_functions
-from openai import OpenAI, RateLimitError
+from openai import OpenAI
+from openai import APIError, RateLimitError, BadRequestError, PermissionDeniedError, NotFoundError
 
+CHROMA_PATH = Path(os.getenv("CHROMA_PATH", "/app/chroma_data"))
+COLLECTION_NAME = os.getenv("COLLECTION_NAME", "smartlib")
+EMBED_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+EMBED_BATCH = int(os.getenv("EMBED_BATCH", "64"))
 
-def _chunks(seq: List[Any], n: int) -> Iterable[List[Any]]:
-    for i in range(0, len(seq), n):
-        yield seq[i : i + n]
+DATA_JSON = Path(__file__).resolve().parent.parent / "data" / "book_summaries.json"
 
 
 class RAGEngine:
-    def __init__(self) -> None:
-        # ---- OpenAI / Embeddings config
-        self.embedding_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
-        self.embed_batch_size = int(os.getenv("EMBED_BATCH_SIZE", "64"))
-        self.max_seed_docs = int(os.getenv("MAX_SEED_DOCS", "200"))
+    def __init__(self):
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY is not set.")
 
-        # New-style project-scoped client (respects OPENAI_API_KEY, OPENAI_PROJECT)
-        # If you're on Azure, wire your Azure client here instead.
-        self.openai = OpenAI()
+        self.chroma_path = str(CHROMA_PATH)
+        self.collection_name = COLLECTION_NAME
+        self.embedding_model = EMBED_MODEL
+        self.embed_batch_size = EMBED_BATCH
 
-        # ---- Chroma config
-        self.chroma_path = os.getenv("CHROMA_PATH", "/app/chroma_data")
-        self.collection_name = os.getenv("CHROMA_COLLECTION", "smartlib")
+        # Chroma persistent client (we pass embeddings explicitly)
         self.client = chromadb.PersistentClient(path=self.chroma_path)
 
-        # You can still swap this to a custom embedding function if desired; we pass embeddings explicitly.
-        self.collection = self._get_or_create_collection(self.collection_name)
+        # Modern OpenAI client
+        self.openai = OpenAI(api_key=api_key)
 
-    # ----------------------------
-    # Chroma helpers
-    # ----------------------------
-    def _get_or_create_collection(self, name: str):
+        # Create or get collection
         try:
-            return self.client.get_collection(name)
+            self.collection = self.client.get_collection(name=self.collection_name)
         except Exception:
-            return self.client.create_collection(name=name)
+            self.collection = self.client.create_collection(name=self.collection_name)
 
-    @staticmethod
-    def _sanitize_metadata(meta: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Chroma metadatas must be primitives (str/int/float/bool/None).
-        Convert lists/dicts/others to JSON strings to avoid validation errors.
-        """
-        out: Dict[str, Any] = {}
-        for k, v in meta.items():
-            if isinstance(v, (str, int, float, bool)) or v is None:
-                out[k] = v
-            elif isinstance(v, (list, tuple, set, dict)):
-                out[k] = json.dumps(v, ensure_ascii=False)
-            else:
-                out[k] = str(v)
-        return out
+    # ---------- Seeding ----------
 
-    # ----------------------------
-    # Embedding
-    # ----------------------------
-    def embed(self, texts: List[str]) -> List[List[float]]:
-        """
-        Batch and retry to keep startup predictable and resilient.
-        """
-        out: List[List[float]] = []
-        for batch in _chunks(texts, self.embed_batch_size):
-            # Basic backoff for transient 429
-            for attempt in range(4):
-                try:
-                    resp = self.openai.embeddings.create(
-                        model=self.embedding_model, input=batch
-                    )
-                    out.extend([d.embedding for d in resp.data])
-                    break
-                except RateLimitError:
-                    sleep(1.5 * (attempt + 1))
-        return out
+    def _read_entries(self) -> List[Dict[str, Any]]:
+        if not DATA_JSON.exists():
+            raise FileNotFoundError(f"Seed file not found: {DATA_JSON}")
+        with open(DATA_JSON, "r", encoding="utf-8") as f:
+            return json.load(f)
 
-    # ----------------------------
-    # Seeding
-    # ----------------------------
-    def seed_if_empty(self) -> None:
-        """
-        Seeds the collection if it's empty. Looks for:
-          - /app/seed/seed.json (list of {"text": str, "metadata": dict})
-          - /app/seed/seed.jsonl (one JSON object per line with same fields)
-          - Any *.txt / *.md files under /app/seed (filename becomes title)
-        Caps total docs via MAX_SEED_DOCS.
-        """
-        if (count := self.collection.count()) and count > 0:
-            return
+    def _embed(self, texts: List[str]) -> List[List[float]]:
+        resp = self.openai.embeddings.create(model=self.embedding_model, input=texts)
+        return [d.embedding for d in resp.data]
 
-        docs, metas = self._load_seed()
-        if not docs:
-            # Nothing to seed; safe no-op
-            return
+    def _chunk(self, items: List[Any], size: int) -> List[List[Any]]:
+        return [items[i:i + size] for i in range(0, len(items), size)]
 
-        # Hard cap & embed
-        docs = docs[: self.max_seed_docs]
-        metas = metas[: self.max_seed_docs]
+    def seed_if_empty(self) -> Tuple[int, int]:
+        """Seed only if empty. Returns (before_count, after_count)."""
+        before = self.collection.count()
+        if before and before > 0:
+            return before, before
+        return self._seed(force=True)
 
-        embeds = self.embed(docs)
-        ids = [f"seed-{i}" for i in range(len(docs))]
+    def reseed(self) -> Tuple[int, int]:
+        """Force reseed (clears collection). Returns (before_count, after_count)."""
+        before = self.collection.count()
+        if before:
+            self.client.delete_collection(self.collection_name)
+            self.collection = self.client.create_collection(name=self.collection_name)
+        return self._seed(force=True, before=before or 0)
 
-        # Add a CSV form of tags if present, for easy filtering
-        safe_metas: List[Dict[str, Any]] = []
-        for m in metas:
-            m = dict(m or {})
-            if "tags" in m and isinstance(m["tags"], (list, tuple, set)):
-                m["tags_csv"] = ",".join(map(str, list(m["tags"])))
-            safe_metas.append(self._sanitize_metadata(m))
+    def _seed(self, force: bool = False, before: int = 0) -> Tuple[int, int]:
+        entries = self._read_entries()
+        if not entries:
+            raise RuntimeError("Seed file is empty.")
 
-        assert len(ids) == len(docs) == len(embeds) == len(safe_metas), "Length mismatch"
-
-        self.collection.add(
-            ids=ids,
-            embeddings=embeds,
-            documents=docs,
-            metadatas=safe_metas,
-        )
-
-    def _load_seed(self) -> Tuple[List[str], List[Dict[str, Any]]]:
-        """
-        Flexible loader. Prefer your existing format if you already had one:
-          - /app/seed/seed.json : [{"text": "...", "metadata": {...}}, ...]
-          - /app/seed/seed.jsonl: {"text": "...", "metadata": {...}} per line
-          - /app/seed/*.(txt|md): plain files; metadata: {"title": <filename>}
-        If none found, returns empty lists.
-        """
-        seed_dir = os.getenv("SEED_DIR", "/app/seed")
-        json_path = os.path.join(seed_dir, "seed.json")
-        jsonl_path = os.path.join(seed_dir, "seed.jsonl")
-
+        ids: List[str] = []
         docs: List[str] = []
         metas: List[Dict[str, Any]] = []
 
-        try:
-            if os.path.isfile(json_path):
-                with open(json_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                for row in data:
-                    docs.append(row.get("text", "") or "")
-                    metas.append(row.get("metadata", {}) or {})
-                return docs, metas
+        for e in entries:
+            themes_list = e.get("themes", [])
+            # ✅ Chroma metadata must be primitives → store as comma-separated string
+            themes_str = ", ".join(themes_list) if isinstance(themes_list, list) else str(themes_list or "")
+            ids.append(e["title"])
+            docs.append(f"{e['short_summary']}\nThemes: {themes_str}")
+            metas.append({
+                "title": e["title"],
+                "author": e.get("author") or "",
+                "themes": themes_str,   # ✅ string, not list
+            })
 
-            if os.path.isfile(jsonl_path):
-                with open(jsonl_path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        line = line.strip()
-                        if not line:
-                            continue
-                        row = json.loads(line)
-                        docs.append(row.get("text", "") or "")
-                        metas.append(row.get("metadata", {}) or {})
-                return docs, metas
+        # Embed & add in chunks
+        for i_chunk, id_chunk in enumerate(self._chunk(ids, self.embed_batch_size)):
+            start = i_chunk * self.embed_batch_size
+            end = (i_chunk + 1) * self.embed_batch_size
+            doc_chunk = docs[start:end]
+            meta_chunk = metas[start:end]
+            try:
+                embeds = self._embed(doc_chunk)
+                self.collection.add(ids=id_chunk, embeddings=embeds, documents=doc_chunk, metadatas=meta_chunk)
+            except (PermissionDeniedError, NotFoundError, BadRequestError, RateLimitError, APIError) as e:
+                raise RuntimeError(f"Embedding/add failed on chunk {i_chunk}: {e}") from e
 
-            # Fallback: text/markdown files
-            paths = sorted(
-                glob.glob(os.path.join(seed_dir, "**", "*.txt"), recursive=True)
-                + glob.glob(os.path.join(seed_dir, "**", "*.md"), recursive=True)
-            )
-            for p in paths:
-                with open(p, "r", encoding="utf-8") as f:
-                    content = f.read()
-                docs.append(content)
-                metas.append({"title": os.path.basename(p), "path": p})
-            return docs, metas
-        except Exception:
-            # On any parsing/IO error, return nothing rather than crashing startup.
-            return [], []
+        after = self.collection.count()
+        return before, after
+
+    # ---------- Search ----------
+
+    def search(self, query: str, k: int = 3) -> List[Dict[str, Any]]:
+        """Semantic search using our own embeddings."""
+        q_vec = self._embed([query])[0]
+        res = self.collection.query(
+            query_embeddings=[q_vec],
+            n_results=k,
+            include=["metadatas", "distances"]
+        )
+        results: List[Dict[str, Any]] = []
+        if not res or not res.get("metadatas"):
+            return results
+
+        metas = res["metadatas"][0]
+        dists = res.get("distances", [[None]])[0]
+        for meta, dist in zip(metas, dists):
+            # themes are stored as a comma-separated string in metadata -> convert back to list[str]
+            themes_field = meta.get("themes", "")
+            if isinstance(themes_field, str):
+                theme_list = [t.strip() for t in themes_field.split(",") if t.strip()]
+            elif isinstance(themes_field, list):
+                # (shouldn't happen now, but defensive)
+                theme_list = [str(t) for t in themes_field]
+            else:
+                theme_list = []
+
+            results.append({
+                "title": meta.get("title", ""),
+                "author": meta.get("author", ""),
+                "themes": theme_list,  # <-- list[str] to satisfy pydantic
+                "score": float(dist) if dist is not None else None,
+            })
+        return results
