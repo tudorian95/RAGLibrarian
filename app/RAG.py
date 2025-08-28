@@ -1,4 +1,4 @@
-# app/rag.py
+# app/rag.py 
 import os
 # Disable Chroma telemetry early (prevents OpenAI proxies issue inside telemetry)
 os.environ["CHROMA_TELEMETRY_ENABLED"] = "false"
