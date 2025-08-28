@@ -24,4 +24,6 @@ docker run --rm -it -e OPENAI_API_KEY="insert-key-here" -e MODEL=gpt-5-nano -e P
 
 You need to provide an OpenAI API key in order to run the app via changing the `insert-key-here` part of the command with an actually valid key.
 
+Also attached a localRagLib image to this repo in case you don't have an api key, just to show the app running
+
 Access the application at: [localhost:8989](http://localhost:8989)
